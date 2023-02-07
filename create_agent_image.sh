@@ -30,12 +30,6 @@ if [ ! -f $3 ]; then
     exit 1
 fi
 
-# Verify openshift-install binary exists
-if [ ! -f /home/$USER/work/installer/bin/openshift-install ]; then
-    echo "openshift-install binary does not exist"
-    exit 1
-fi
-
 # read value from file into env var for pull-secret
 export PULL_SECRET=$(cat $2)
 
@@ -97,7 +91,7 @@ EOL
 workdir=$1
 echo "${installconfig}" >$workdir/install-config.yaml
 echo "${agentconfig}" >$workdir/agent-config.yaml
-/home/$USER/work/installer/bin/openshift-install agent create image --log-level debug --dir $workdir
+openshift-install agent create image --log-level debug --dir $workdir
 
 # recreate install-config.yaml and agent-config.yaml that were removed by openshift-install
 echo "${installconfig}" >$workdir/install-config.yaml
