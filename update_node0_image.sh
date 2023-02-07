@@ -54,7 +54,8 @@ rhcos_ver=$(cat /mnt/iso/coreos/kargs.json | awk '/default/ {print $0}' | awk -F
 umount /mnt/iso
 
 # add rhcos partition
-parted -s $DEVICE mkpart $rhcos_ver ext4 $first_sector_new $last_sector_new
+# FIXME: align sectors to 2048
+parted -s $DEVICE mkpart $rhcos_ver ext4 ${first_sector_new}s ${last_sector_new}s
 
 # add 2 partitions size 2G and 18G respectively
 last_sector_used=$(fdisk -l $DEVICE | tail -1 | awk '{ print $3 }')
@@ -62,7 +63,8 @@ last_sector_used=$(fdisk -l $DEVICE | tail -1 | awk '{ print $3 }')
 first_sector_new=$(($last_sector_used + 1))
 
 # add agentdata partition
-parted -s $DEVICE -- mkpart agentdata ext4 $first_sector_new -50s
+# FIXME: align sectors to 2048
+parted -s $DEVICE -- mkpart agentdata ext4 ${first_sector_new}s -50s
 
 rhcos_part=$(sfdisk --dump -J $DEVICE  | jq -r '.partitiontable.partitions[] | select(.name) | select(.name | startswith("rhcos")) | .node')
 agentdata_part_uuid=$(sfdisk --dump -J $DEVICE  | jq -r '.partitiontable.partitions[] | select(.name) | select(.name | startswith("agentdata")) | .uuid')
@@ -104,6 +106,7 @@ linux /agentiso/pxeboot/vmlinuz
 initrd /agentiso/pxeboot/initrd.img /agentiso/ignition.img
 EOF
 
+# Give a chance to hit the boot menu
 sed -i 's/set timeout=1/set timeout=5/' $boot_mnt/boot/grub2/grub.cfg
 
 umount $boot_mnt
