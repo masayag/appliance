@@ -102,8 +102,8 @@ cat <<EOF > $boot_mnt/boot/loader/entries/agent.conf
 title SYSTEM RESET
 version 1
 options random.trust_cpu=on console=tty0 console=ttyS0,115200n8 coreos.liveiso=$rhcos_ver ignition.firstboot ignition.platform.id=metal root=UUID=$root_part_uuid ro boot=UUID=$boot_part_uuid
-linux /agentiso/pxeboot/vmlinuz
-initrd /agentiso/pxeboot/initrd.img /agentiso/ignition.img
+linux /agentiso/vmlinuz
+initrd /agentiso/initrd.img /agentiso/ignition.img
 EOF
 
 # Give a chance to hit the boot menu
