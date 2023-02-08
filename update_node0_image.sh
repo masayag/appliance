@@ -24,7 +24,7 @@ if [ ! -f $AGENT_ISO ]; then
 fi
 
 # verify device exist
-if [ ! -b DEVICE ]; then
+if [ ! -f $DEVICE ]; then
     echo "Device DEVICE does not exist"
     exit 1
 fi
@@ -40,6 +40,9 @@ qemu-img resize $IMG_FILE +20G
 
 # map image to device
 qemu-nbd -c $DEVICE $IMG_FILE
+
+# trap to unmount and disconnect device on exit
+trap "qemu-nbd -d $DEVICE" EXIT
 
 # add 2 partitions size 2G and 18G respectively
 last_sector_used=$(fdisk -l $DEVICE | tail -1 | awk '{ print $3 }')
