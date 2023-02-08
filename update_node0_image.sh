@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 #Verify 3 arguments are provided: IMG_FILE, AGENT_ISO, DEVICE
 if [ $# -ne 3 ]; then
     echo "Usage: $0 <IMG_FILE> <AGENT_ISO> <DEVICE>"
@@ -41,7 +43,7 @@ qemu-img resize $IMG_FILE +20G
 qemu-nbd -c $DEVICE $IMG_FILE
 
 # trap to unmount and disconnect device on exit
-trap "qemu-nbd -d $DEVICE" EXIT
+# trap "qemu-nbd -d $DEVICE" EXIT
 
 # add 2 partitions size 2G and 18G respectively
 last_sector_used=$(fdisk -l $DEVICE | tail -1 | awk '{ print $3 }')
