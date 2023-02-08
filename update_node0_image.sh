@@ -23,7 +23,7 @@ if [ ! -f $AGENT_ISO ]; then
 fi
 
 # verify device exist
-if [ ! -f $DEVICE ]; then
+if [ ! -b $DEVICE ]; then
     echo "Device DEVICE does not exist"
     exit 1
 fi
