@@ -45,6 +45,9 @@ qemu-nbd -c $DEVICE $IMG_FILE
 # trap to unmount and disconnect device on exit
 # trap "qemu-nbd -d $DEVICE" EXIT
 
+# rewrite partition table at the end of resized disk
+sgdisk --move-second-header /dev/nbd0
+
 # add 2 partitions size 2G and 18G respectively
 last_sector_used=$(fdisk -l $DEVICE | tail -1 | awk '{ print $3 }')
 # add 1 to last sector used to get the first sector of the new partition
