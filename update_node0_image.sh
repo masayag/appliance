@@ -1,16 +1,15 @@
 #!/bin/bash
 
-#Verify 3 arguments are provided: IMG_FILE, AGENT_ISO, DEVICE_NAME
+#Verify 3 arguments are provided: IMG_FILE, AGENT_ISO, DEVICE
 if [ $# -ne 3 ]; then
-    echo "Usage: $0 <IMG_FILE> <AGENT_ISO> [DEVICE_NAME]"
+    echo "Usage: $0 <IMG_FILE> <AGENT_ISO> <DEVICE>"
     echo "Example: $0 /var/lib/libvirt/images/fedora-coreos-testing.qcow2 /var/lib/libvirt/images/agent.iso nbd1"
     exit 1
 fi
 
 IMG_FILE=$1
 AGENT_ISO=$2
-#if $3 not provided, use nbd0
-DEVICE=/dev/${3:-nbd0}
+DEVICE=/dev/$3
 
 if [ ! -f $IMG_FILE ]; then
     echo "Image $IMG_FILE does not exist"
