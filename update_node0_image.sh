@@ -108,7 +108,7 @@ cp $rhcos_mnt/images/pxeboot/initrd.img $boot_mnt/boot/agentiso/
 cat <<EOF > $boot_mnt/boot/loader/entries/agent.conf
 title SYSTEM RESET
 version 1
-options random.trust_cpu=on console=tty0 console=ttyS0,115200n8 coreos.liveiso=$rhcos_ver ignition.firstboot ignition.platform.id=metal root=PARTUUID=$root_part_uuid ro boot=PARTUUID=$boot_part_uuid
+options random.trust_cpu=on console=tty0 console=ttyS0,115200n8 coreos.liveiso=$rhcos_ver ignition.firstboot ignition.platform.id=metal root=PARTUUID=${root_part_uuid,,} ro boot=PARTUUID=${boot_part_uuid,,}
 linux /agentiso/vmlinuz
 initrd /agentiso/initrd.img /agentiso/ignition.img
 EOF
