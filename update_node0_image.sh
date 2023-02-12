@@ -73,44 +73,48 @@ first_sector_new=$(($last_sector_used + 1))
 # FIXME: align sectors to 2048
 parted -s $DEVICE -- mkpart agentdata ext4 ${first_sector_new}s -50s
 
-rhcos_part=$(sfdisk --dump -J $DEVICE  | jq -r '.partitiontable.partitions[] | select(.name) | select(.name | startswith("rhcos")) | .node')
-agentdata_part_uuid=$(sfdisk --dump -J $DEVICE  | jq -r '.partitiontable.partitions[] | select(.name) | select(.name | startswith("agentdata")) | .uuid')
-agentdata_part=$(sfdisk --dump -J $DEVICE  | jq -r '.partitiontable.partitions[] | select(.name) | select(.name | startswith("agentdata")) | .node')
-
 # copy agent.iso to the new partition labels rhcos-*
+# for now, there isn't really need for this partition. Reset of the device will be done from agentdata partition, which
+# will contain the ignition.img, kernel/initrd.img and rootfs.img.
+rhcos_part=$(sfdisk --dump -J $DEVICE  | jq -r '.partitiontable.partitions[] | select(.name) | select(.name | startswith("rhcos")) | .node')
 dd if=$AGENT_ISO of=$rhcos_part
 
 # format the new partition labels agentdata (TBD: ext4 or xfs)
 mkfs.ext4 -L agentdata $agentdata_part
-
-# list partitions of the device
-lsblk -o NAME,LABEL,PARTLABEL,SIZE,TYPE,FSTYPE,UUID,PARTUUID $DEVICE
-
-# mount the boot partition
-boot_part=$(sfdisk --dump -J $DEVICE  | jq -r '.partitiontable.partitions[] | select(.name) | select(.name == "boot") | .node')
-boot_part_uuid=$(sfdisk --dump -J $DEVICE  | jq -r '.partitiontable.partitions[] | select(.name) | select(.name == "boot") | .uuid')
-root_part_uuid=$(sfdisk --dump -J $DEVICE  | jq -r '.partitiontable.partitions[] | select(.name) | select(.name == "root") | .uuid')
-boot_mnt=/mnt/${boot_part##*/}
-mkdir -p $boot_mnt
-mount -o rw $boot_part $boot_mnt
+agentdata_part=$(sfdisk --dump -J $DEVICE  | jq -r '.partitiontable.partitions[] | select(.name) | select(.name | startswith("agentdata")) | .node')
+agentdata_mnt=/mnt/${agentdata_part##*/}
+mkdir -p $agentdata_mnt
+mount -o rw $agentdata_part $agentdata_mnt
 
 # mount the partition with agent image
 rhcos_mnt=/mnt/${rhcos_part##*/}
 mkdir -p $rhcos_mnt
 mount -t iso9660 -o ro,loop $rhcos_part $rhcos_mnt
 
-# Add boot option from agent image to boot menu
-mkdir -p $boot_mnt/boot/agentiso/
-cp $rhcos_mnt/images/ignition.img $boot_mnt/boot/agentiso/
-cp $rhcos_mnt/images/pxeboot/vmlinuz $boot_mnt/boot/agentiso/
-cp $rhcos_mnt/images/pxeboot/initrd.img $boot_mnt/boot/agentiso/
+# copy ignition.img, kernel/initrd.img and rootfs.img to agentdata partition
+mkdir -p $agentdata_mnt/agentboot/
+cp $rhcos_mnt/images/ignition.img $agentdata_mnt/agentboot/
+cp $rhcos_mnt/images/pxeboot/vmlinuz $agentdata_mnt/agentboot/
+cp $rhcos_mnt/images/pxeboot/initrd.img $agentdata_mnt/agentboot/
+cp $rhcos_mnt/images/pxeboot/rootfs.img $agentdata_mnt/agentboot/
 
+# mount the boot partition
+boot_part=$(sfdisk --dump -J $DEVICE  | jq -r '.partitiontable.partitions[] | select(.name) | select(.name == "boot") | .node')
+boot_mnt=/mnt/${boot_part##*/}
+mkdir -p $boot_mnt
+mount -o rw $boot_part $boot_mnt
+
+#TODO: Replace hard-coded gpt6 with the partition number of the agentdata partition
+
+# Add boot option from agent image to boot menu
 cat <<EOF > $boot_mnt/boot/loader/entries/agent.conf
 title SYSTEM RESET
 version 1
-options random.trust_cpu=on console=tty0 console=ttyS0,115200n8 coreos.liveiso=$rhcos_ver ignition.firstboot ignition.platform.id=metal root=PARTUUID=${root_part_uuid,,} ro boot=PARTUUID=${boot_part_uuid,,}
-linux /agentiso/vmlinuz
-initrd /agentiso/initrd.img /agentiso/ignition.img
+insmod gzio
+# set root='hd0,gpt6' - this doesn't work because of blscfg. Need to figure out how to set root for this entry.
+options random.trust_cpu=on console=tty0 console=ttyS0,115200n8 ignition.firstboot ignition.platform.id=metal ro
+linux /agentboot/vmlinuz
+initrd /agentboot/initrd.img ($root)/agentboot/ignition.img ($root)/agentboot/rootfs.img
 EOF
 
 # Give a chance to hit the boot menu
@@ -118,5 +122,9 @@ sed -i 's/set timeout=1/set timeout=5/' $boot_mnt/boot/grub2/grub.cfg
 
 umount $boot_mnt
 umount $rhcos_mnt
+umount $agentdata_mnt
+
+# list partitions of the device
+lsblk -o NAME,LABEL,PARTLABEL,SIZE,TYPE,FSTYPE,UUID,PARTUUID $DEVICE
 
 qemu-nbd -d $DEVICE
