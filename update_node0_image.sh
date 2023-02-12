@@ -108,7 +108,8 @@ mount -o rw $boot_part $boot_mnt
 
 # Add boot option from agent image to boot menu
 cat <<EOF > $boot_mnt/boot/grub2/user.cfg
-menuentry 'SYSTEM RESET X' {
+set timeout=10
+menuentry 'SYSTEM RESET' {
   search --set=root --label agentdata
   load_video
   set gfx_payload=keep
@@ -117,9 +118,6 @@ menuentry 'SYSTEM RESET X' {
   initrd /agentboot/initrd.img /agentboot/ignition.img /agentboot/rootfs.img
 }
 EOF
-
-# Give a chance to hit the boot menu
-sed -i 's/set timeout=1/set timeout=5/' $boot_mnt/boot/grub2/grub.cfg
 
 umount $boot_mnt
 umount $rhcos_mnt
