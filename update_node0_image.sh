@@ -107,14 +107,15 @@ mount -o rw $boot_part $boot_mnt
 #TODO: Replace hard-coded gpt6 with the partition number of the agentdata partition
 
 # Add boot option from agent image to boot menu
-cat <<EOF > $boot_mnt/boot/loader/entries/agent.conf
-title SYSTEM RESET
-version 1
-insmod gzio
-# set root='hd0,gpt6' - this doesn't work because of blscfg. Need to figure out how to set root for this entry.
-options random.trust_cpu=on console=tty0 console=ttyS0,115200n8 ignition.firstboot ignition.platform.id=metal ro
-linux /agentboot/vmlinuz
-initrd /agentboot/initrd.img ($root)/agentboot/ignition.img ($root)/agentboot/rootfs.img
+cat <<EOF > $boot_mnt/boot/grub2/user.cfg
+menuentry 'SYSTEM RESET X' {
+  search --set=root --label agentdata
+  load_video
+  set gfx_payload=keep
+  insmod gzio
+  linux /agentboot/vmlinuz random.trust_cpu=on console=tty0 console=ttyS0,115200n8 ignition.firstboot ignition.platform.id=metal ro
+  initrd /agentboot/initrd.img /agentboot/ignition.img /agentboot/rootfs.img
+}
 EOF
 
 # Give a chance to hit the boot menu
