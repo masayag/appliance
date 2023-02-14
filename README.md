@@ -242,4 +242,8 @@ CLUSTER_ID=$(curl -s  http://$RENDEZVOUS_IP:8090/api/assisted-install/v2/cluster
 curl -s  http://$RENDEZVOUS_IP:8090/api/assisted-install/v2/clusters/${CLUSTER_ID} | jq -r .status_info
 ```
 
-
+# Other scripts in this project
+There are additional two scripts in this project:
+* `patch_release_version.sh` - patches the release version of openshift-installer. This script should be run after openshift-installer was built
+  based on the tailored images of assisted-installer-service and assisted-installer-agent.
+* `create_agent_agent.sh` - creates an agent ISO image using the patched openshift-installer.
