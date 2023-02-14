@@ -199,3 +199,8 @@ The rest of the process relies on a script to prepare the device and copy the re
 ```bash
 bash -x update_node0_image.sh $SNO_IMG /var/lib/libvirt/images/agent.iso nbd0
 ```
+
+Boot the VM and verify that the new boot menu entry is available.
+To start the agent-based installation, select the new menu entry 'SYSTEM RESET' and follow the instructions.
+For SNO that meets the requirements, the installation should be completed automatically.
+Note that it takes nearly 30 minutes for SNO to be installed and fully operational.
