@@ -204,3 +204,42 @@ Boot the VM and verify that the new boot menu entry is available.
 To start the agent-based installation, select the new menu entry 'SYSTEM RESET' and follow the instructions.
 For SNO that meets the requirements, the installation should be completed automatically.
 Note that it takes nearly 30 minutes for SNO to be installed and fully operational.
+
+## Troubleshooting
+There are several steps in which the installation can fail.
+The steps to troubleshoot the installation depend on the stage of the installation.
+One recommendation is to ssh to the VM and check the logs of the agent-based installer.
+agent-based installer will start assisted-service pod which is a good source of information.
+```bash
+RENDEZVOUS_IP=192.168.122.118
+
+# ssh to the VM
+ssh core@$RENDEZVOUS_IP
+
+# view the logs of the agent-based installer
+sudo journalctl -u agent.service
+
+# view the pods started by the agent-based installer
+sudo podman ps
+
+# view the logs of the assisted-service container
+sudo podman logs service
+```
+
+If the installation fails, the assisted-service API should be used to query the failure reason.
+```bash
+# A single infra env is created
+INFRA_ENV_ID=$(curl -s http://$RENDEZVOUS_IP:8090/api/assisted-install/v2/infra-envs/ | jq -r .[].id)
+
+# View host status info (for SNO, there is only one host)
+curl -s  http://$RENDEZVOUS_IP:8090/api/assisted-install/v2/infra-envs/${INFRA_ENV_ID}/hosts | jq -r .[].status_info
+
+# In case of a disk problem, the disk inventory can be used to check the disk details
+curl -s  http://$RENDEZVOUS_IP:8090/api/assisted-install/v2/infra-envs/${INFRA_ENV_ID}/hosts | jq -r  .[].inventory  | jq .disks
+
+# View cluster status info
+CLUSTER_ID=$(curl -s  http://$RENDEZVOUS_IP:8090/api/assisted-install/v2/clusters | jq -r  .[].id)
+curl -s  http://$RENDEZVOUS_IP:8090/api/assisted-install/v2/clusters/${CLUSTER_ID} | jq -r .status_info
+```
+
+
