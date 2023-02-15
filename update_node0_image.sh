@@ -108,7 +108,7 @@ function add_agent_iso_resources_to_agentdata_partition {
   mount -o rw $boot_part $boot_mnt
 
   # add boot option to boot menu
-  echo "$resetconfig" > $boot_mnt/boot/grub2/user.cfg
+  echo "$reset_menu_entry" > $boot_mnt/boot/grub2/user.cfg
 }
 
 #####################################################
@@ -126,7 +126,7 @@ function mount_agent_iso {
 function update_agent_ignition_config {
   # Add boot option from agent image to boot menu, and set it as not default (this menu entry will be used for reset, and should not be the default)
   # The default value is 1, which is the second menu entry (counting starts from 0)
-  read -r -d '' resetconfig << EOF
+  read -r -d '' reset_menu_entry << EOF
 set timeout=10
 set default=1
 menuentry 'SYSTEM RESET' {
@@ -139,9 +139,9 @@ menuentry 'SYSTEM RESET' {
 }
 EOF
 
-content=$(echo "$resetconfig" | base64 -w 0)
-tmp_dir=$(mktemp -d /tmp/ignition.XXXXXX)
-cat <<EOF > $tmp_dir/reset_ignition.json
+  content=$(echo "$reset_menu_entry" | base64 -w 0)
+  tmp_dir=$(mktemp -d /tmp/ignition.XXXXXX)
+  cat <<EOF > $tmp_dir/reset_ignition.json
 {
   "storage": {
     "files": [{
@@ -171,7 +171,7 @@ reduce ($b | paths(scalars)) as $p (.;
 EOF
 
   jq -f $tmp_dir/merge.jq --argfile b $tmp_dir/reset_ignition.json $tmp_ignition_dir/config.ign > $tmp_dir/merged_ignition.ign
-  mv $tmp_dir/merged_ignition.ign $tmp_ignition_dir/config.ign
+  jq -c $tmp_dir/merged_ignition.ign > $tmp_ignition_dir/config.ign
   find . | cpio -H newc -o | gzip -9 > $tmp_ignition_dir/ignition.img
   popd
 }
