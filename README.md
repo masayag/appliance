@@ -15,8 +15,8 @@ It is required to reserve IP Address for the node in the DHCP server, since the 
 also hard-coded in the agent image. Therefore, if using libvirt, a simple way can be to use the DHCP server
 of the used network:
 ```bash
-MAC_ADDRESS=52:54:00:e7:05:79
-RENDEZVOUS_IP=192.168.122.118
+MAC_ADDRESS=52:54:00:e7:05:72
+RENDEZVOUS_IP=192.168.122.116
 NETWORK_NAME=default
 
 # Add the host to the network's DHCP server, without needing to restart the network:
