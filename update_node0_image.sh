@@ -123,7 +123,7 @@ function mount_agent_iso {
 #####################################################
 # Update ignition config to add boot option for reset
 #####################################################
-function update_ignition_config {
+function update_agent_ignition_config {
   # Add boot option from agent image to boot menu, and set it as not default (this menu entry will be used for reset, and should not be the default)
   # The default value is 1, which is the second menu entry (counting starts from 0)
   read -r -d '' resetconfig << EOF
@@ -178,7 +178,7 @@ EOF
 
 add_agentdata_partition
 mount_agent_iso
-update_ignition_from_agent_iso
+update_agent_ignition_config
 add_agent_iso_resources_to_agentdata_partition
 
 umount $boot_mnt
