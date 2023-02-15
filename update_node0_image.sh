@@ -96,7 +96,7 @@ function add_agent_iso_resources_to_agentdata_partition {
 
   # copy ignition.img, kernel/initrd.img and rootfs.img to agentdata partition
   mkdir -p $agentdata_mnt/agentboot/
-  cp $tmp_ignition_dir/ignition.img $agentdata_mnt/agentboot/
+  cp $updated_ignition_dir/ignition.img $agentdata_mnt/agentboot/
   cp $agent_iso_mnt/images/pxeboot/vmlinuz $agentdata_mnt/agentboot/
   cp $agent_iso_mnt/images/pxeboot/initrd.img $agentdata_mnt/agentboot/
   cp $agent_iso_mnt/images/pxeboot/rootfs.img $agentdata_mnt/agentboot/
@@ -126,7 +126,7 @@ function mount_agent_iso {
 function update_agent_ignition_config {
   # Add boot option from agent image to boot menu, and set it as not default (this menu entry will be used for reset, and should not be the default)
   # The default value is 1, which is the second menu entry (counting starts from 0)
-  read -r -d '' reset_menu_entry << EOF
+  reset_menu_entry=$(cat << EOF
 set timeout=10
 set default=1
 menuentry 'SYSTEM RESET' {
@@ -138,6 +138,7 @@ menuentry 'SYSTEM RESET' {
   initrd /agentboot/initrd.img /agentboot/ignition.img /agentboot/rootfs.img
 }
 EOF
+)
 
   content=$(echo "$reset_menu_entry" | base64 -w 0)
   tmp_dir=$(mktemp -d /tmp/ignition.XXXXXX)
@@ -159,7 +160,7 @@ EOF
 EOF
 
   tmp_ignition_dir=$(mktemp -d)
-  cp /mnt/iso/images/ignition.img $tmp_ignition_dir
+  cp $agent_iso_mnt/images/ignition.img $tmp_ignition_dir
   pushd $tmp_ignition_dir
   zcat ignition.img | cpio -idmnv
   rm ignition.img
@@ -171,8 +172,9 @@ reduce ($b | paths(scalars)) as $p (.;
 EOF
 
   jq -f $tmp_dir/merge.jq --argfile b $tmp_dir/reset_ignition.json $tmp_ignition_dir/config.ign > $tmp_dir/merged_ignition.ign
-  jq -c $tmp_dir/merged_ignition.ign > $tmp_ignition_dir/config.ign
-  find . | cpio -H newc -o | gzip -9 > $tmp_ignition_dir/ignition.img
+  jq -c . $tmp_dir/merged_ignition.ign > $tmp_ignition_dir/config.ign
+  updated_ignition_dir=$(mktemp -d)
+  find . | cpio -H newc -o | gzip -9 > $updated_ignition_dir/ignition.img
   popd
 }
 
@@ -182,7 +184,6 @@ update_agent_ignition_config
 add_agent_iso_resources_to_agentdata_partition
 
 umount $boot_mnt
-umount $rhcos_mnt
 umount $agentdata_mnt
 umount $agent_iso_mnt
 

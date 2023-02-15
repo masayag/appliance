@@ -106,14 +106,14 @@ SNO_IMG_SIZE=120
 ```
 
 ### Alternative 1: Using a ISO file cached by agent.iso creation
-When creating the agent.iso, coreos image is downloaded and cached into _$HOME/.cache/agent/image_cache/coreos-x86_64.iso_
+When creating the agent.iso, RHCOS image is downloaded and cached into _$HOME/.cache/agent/image_cache/coreos-x86_64.iso_
 This image can be used to boot the VM and install the OS. Copy the image to a location accessible by the qemu.
 Alternately, other live-cd should be usable.
 To ease the debug process, the serial console is enabled.
 ```bash
 COREOS_ISO=$HOME/.cache/agent/image_cache/coreos-x86_64.iso
 BOOT_COREOS_ISO=/var/lib/libvirt/images/coreos-x86_64.iso
-cp $COREOS_ISO $BOOT_COREOS_ISO
+cp -f $COREOS_ISO $BOOT_COREOS_ISO
 
 # We'll use the same image for booting the OS of the target node.
 # Any required changes can be applied to the image before booting the VM.
@@ -149,7 +149,12 @@ sudo reboot
 Where `192.168.122.1` is the IP address of the virtual network used by the VM.
 
 ### Alternative 2: Using a qcow2 image downloaded from the internet
-Another option is to download qcow2 image from the internet (1.5G).
+Another option is to download FCOS qcow2 image from the internet (1.5G).
+
+**Known issue**: This method is not working at the moment.
+This method is more convenient, and allows to reuse the same backing store image for multiple VMs.
+However, using the kernel provided within this images fails to boot.
+
 ```bash
 # as an installed binary:
 coreos-installer download -s stable \
@@ -211,7 +216,7 @@ The steps to troubleshoot the installation depend on the stage of the installati
 One recommendation is to ssh to the VM and check the logs of the agent-based installer.
 agent-based installer will start assisted-service pod which is a good source of information.
 ```bash
-RENDEZVOUS_IP=192.168.122.118
+RENDEZVOUS_IP=192.168.122.116
 
 # ssh to the VM
 ssh core@$RENDEZVOUS_IP
@@ -247,3 +252,8 @@ There are additional two scripts in this project:
 * `patch_release_version.sh` - patches the release version of openshift-installer. This script should be run after openshift-installer was built
   based on the tailored images of assisted-installer-service and assisted-installer-agent.
 * `create_agent_agent.sh` - creates an agent ISO image using the patched openshift-installer.
+
+# Next steps
+* Add support for disconnected installation by adding the agent installation resources
+* Add support for installing a disconnected cluster from ISO
+* Add support for multiple nodes 
