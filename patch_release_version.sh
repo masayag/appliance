@@ -29,7 +29,7 @@ function patch_openshift_install_release_image() {
     fi
 }
 
-release_image=quay.io/openshift-release-dev/ocp-release:4.11.13-x86_64
+release_image=quay.io/openshift-release-dev/ocp-release:4.12.4-x86_64
 release_version=$(oc adm release info -o template --template '{{.metadata.version}}' --insecure=true ${release_image})
 
 patch_openshift_install_release_version $release_version
