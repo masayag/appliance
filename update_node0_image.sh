@@ -96,7 +96,14 @@ function add_agent_iso_resources_to_agentdata_partition {
 
   # copy ignition.img, kernel/initrd.img and rootfs.img to agentdata partition
   mkdir -p $agentdata_mnt/agentboot/
-  cp $updated_ignition_dir/ignition.img $agentdata_mnt/agentboot/
+
+  # in previous version, the ignition.img was the one produced by update_agent_ignition_config
+  # due to unresolved issue, falling back to the origin ignition.img
+  # in the future, propagating the `$boot_mnt/boot/grub2/user.cfg` to the ignition should be done
+  # via a format API, e.g. by using extra-manifests of the installer
+  cp $agent_iso_mnt/images/ignition.img $agentdata_mnt/agentboot/
+
+  # copy kernel/initrd.img and rootfs.img from agent iso to agentdata partition
   cp $agent_iso_mnt/images/pxeboot/vmlinuz $agentdata_mnt/agentboot/
   cp $agent_iso_mnt/images/pxeboot/initrd.img $agentdata_mnt/agentboot/
   cp $agent_iso_mnt/images/pxeboot/rootfs.img $agentdata_mnt/agentboot/
@@ -121,11 +128,11 @@ function mount_agent_iso {
 }
 
 #####################################################
-# Update ignition config to add boot option for reset
+# Define boot option for reset
 #####################################################
-function update_agent_ignition_config {
-  # Add boot option from agent image to boot menu, and set it as not default (this menu entry will be used for reset, and should not be the default)
-  # The default value is 1, which is the second menu entry (counting starts from 0)
+function define_menu_entry {
+  # Add boot option from agent image to boot menu, and set it as not default (this menu entry will be used for reset,
+  # and should not be the default) The default value is 1, which is the second menu entry (counting starts from 0)
   reset_menu_entry=$(cat << EOF
 set timeout=10
 set default=1
@@ -138,7 +145,14 @@ menuentry 'SYSTEM RESET' {
   initrd /agentboot/initrd.img /agentboot/ignition.img /agentboot/rootfs.img
 }
 EOF
-)
+  )
+}
+
+#####################################################
+# Update ignition config to add boot option for reset
+#####################################################
+function update_agent_ignition_config {
+
 
   content=$(echo "$reset_menu_entry" | base64 -w 0)
   tmp_dir=$(mktemp -d /tmp/ignition.XXXXXX)
@@ -180,7 +194,8 @@ EOF
 
 add_agentdata_partition
 mount_agent_iso
-update_agent_ignition_config
+define_menu_entry
+# update_agent_ignition_config
 add_agent_iso_resources_to_agentdata_partition
 
 umount $boot_mnt
