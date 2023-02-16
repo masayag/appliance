@@ -202,7 +202,7 @@ virsh shutdown sno
 
 The rest of the process relies on a script to prepare the device and copy the resources to the VM image.
 ```bash
-bash -x update_node0_image.sh $SNO_IMG /var/lib/libvirt/images/agent.iso nbd0
+bash -x update_node_image.sh $SNO_IMG /var/lib/libvirt/images/agent.iso nbd0
 ```
 
 Boot the VM and verify that the new boot menu entry is available.
@@ -255,5 +255,8 @@ There are additional two scripts in this project:
 
 # Next steps
 * Add support for disconnected installation by adding the agent installation resources
-* Add support for installing a disconnected cluster from ISO
-* Add support for multiple nodes 
+* Change boot menu entry for initial installation to be the default boot option, without a menu
+  * This will allow the installation to be started automatically after the VM is booted
+* Add boot menu entry as "SYSTEM RESET" as non-default boot option for the installed system
+  * This will allow the user to reset the system to the initial installation state
+* Add support for multiple nodes
