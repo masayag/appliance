@@ -15,8 +15,6 @@ It is required to reserve IP Address for the node in the DHCP server, since the 
 also hard-coded in the agent image. Therefore, if using libvirt, a simple way can be to use the DHCP server
 of the used network:
 ```bash
-modprobe nbd
-
 MAC_ADDRESS=52:54:00:e7:05:72
 RENDEZVOUS_IP=192.168.122.116
 NETWORK_NAME=default
@@ -208,6 +206,7 @@ virsh shutdown sno
 
 The rest of the process relies on a script to prepare the device and copy the resources to the VM image.
 ```bash
+modprobe nbd
 bash -x update_node_image.sh $SNO_IMG /var/lib/libvirt/images/agent.iso nbd0
 ```
 
