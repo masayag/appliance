@@ -25,9 +25,14 @@ NETWORK_NAME=default
 virsh net-update $NETWORK_NAME add-last ip-dhcp-host \
     "<host mac='${MAC_ADDRESS}' ip='${RENDEZVOUS_IP}'/>" \
     --live --config --parent-index 0
+```
 
+```shell
 # Verify the changes:
 virsh net-dumpxml --network $NETWORK_NAME
+```
+Output:
+```xml
 <network>
   <name>default</name>
   <uuid>7de07e73-d7d4-4672-b342-7155648c216a</uuid>
@@ -139,9 +144,32 @@ The VM should boot and a console should be available to follow the installation 
 In this scenario, let's serve the ignition file using a simple web server from the hyperviosr:
 ```bash
 # Make sure port 9000 is accessible
-# sudo firewall-cmd --add-port=9000/tcp --zone=libvirt --permanent
-# sudo firewall-cmd --runtime-to-permanent
+sudo firewall-cmd --list-all --zone=libvirt
+```
+```bash
+libvirt (active)
+  target: ACCEPT
+  icmp-block-inversion: no
+  interfaces: virbr0
+  sources:
+  services: dhcp dhcpv6 dns ssh tftp
+  ports: 9000/tcp
+  protocols: icmp ipv6-icmp
+  forward: no
+  masquerade: no
+  forward-ports:
+  source-ports:
+  icmp-blocks:
+  rich rules:
+	rule priority="32767" reject
+```
+If port 9000 is not listed, do the following:
+```bash
+sudo firewall-cmd --add-port=9000/tcp --zone=libvirt --permanent
+sudo firewall-cmd --runtime-to-permanent
+```
 
+```bash
 cd $IGN_DIR
 python3 -m http.server 9000
 ```
@@ -150,6 +178,8 @@ The ignition file can be served from any other web server, as long as the VM can
 From the booted VM, run the following to start installation:
 ```bash
 sudo coreos-installer install /dev/vda --ignition-url http://192.168.122.1:9000/init.ign --insecure-ignition
+```
+```bash
 sudo reboot
 ```
 Where `192.168.122.1` is the IP address of the virtual network used by the VM.
