@@ -15,6 +15,8 @@ It is required to reserve IP Address for the node in the DHCP server, since the 
 also hard-coded in the agent image. Therefore, if using libvirt, a simple way can be to use the DHCP server
 of the used network:
 ```bash
+modprobe nbd
+
 MAC_ADDRESS=52:54:00:e7:05:72
 RENDEZVOUS_IP=192.168.122.116
 NETWORK_NAME=default
@@ -136,6 +138,10 @@ virt-install --name sno \
 The VM should boot and a console should be available to follow the installation process.
 In this scenario, let's serve the ignition file using a simple web server from the hyperviosr:
 ```bash
+# Make sure port 9000 is accessible
+# sudo firewall-cmd --add-port=9000/tcp --zone=libvirt --permanent
+# sudo firewall-cmd --runtime-to-permanent
+
 cd $IGN_DIR
 python3 -m http.server 9000
 ```
@@ -206,6 +212,10 @@ bash -x update_node_image.sh $SNO_IMG /var/lib/libvirt/images/agent.iso nbd0
 ```
 
 Boot the VM and verify that the new boot menu entry is available.
+```bash
+virsh start sno && virsh console sno
+```
+
 To start the agent-based installation, select the new menu entry 'SYSTEM RESET' and follow the instructions.
 For SNO that meets the requirements, the installation should be completed automatically.
 Note that it takes nearly 30 minutes for SNO to be installed and fully operational.
