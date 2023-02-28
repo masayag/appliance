@@ -226,7 +226,7 @@ The resources that will be added to the VM are:
 * Boot menu entry to allow booting the VM using the agent-based installer
 * The kernel, initramfs, rootfs and ignition of the agent-based installer
 Other changes:
-* Setting the new menu entry `SYSTEM RESET` as the non-default boot option.
+* Setting the new menu entry `Agent-Based Installer` as the non-default boot option.
 * Extend boot menu timeout to 10 seconds.
 
 First, the VM needs to be shutdown:
@@ -245,7 +245,7 @@ Boot the VM and verify that the new boot menu entry is available.
 virsh start sno && virsh console sno
 ```
 
-To start the agent-based installation, select the new menu entry 'SYSTEM RESET' and follow the instructions.
+To start the agent-based installation, select the new menu entry 'Agent-Based Installer' and follow the instructions.
 For SNO that meets the requirements, the installation should be completed automatically.
 Note that it takes nearly 30 minutes for SNO to be installed and fully operational.
 
@@ -296,6 +296,6 @@ There are additional two scripts in this project:
 * Add support for disconnected installation by adding the agent installation resources
 * Change boot menu entry for initial installation to be the default boot option, without a menu
   * This will allow the installation to be started automatically after the VM is booted
-* Add boot menu entry as "SYSTEM RESET" as non-default boot option for the installed system
+* Add boot menu entry as "Agent-Based Installer" as non-default boot option for the installed system
   * This will allow the user to reset the system to the initial installation state
 * Add support for multiple nodes

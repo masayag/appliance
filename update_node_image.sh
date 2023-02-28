@@ -136,7 +136,7 @@ function define_menu_entry {
   reset_menu_entry=$(cat << EOF
 set timeout=10
 set default=1
-menuentry 'SYSTEM RESET' {
+menuentry 'Agent-Based Installer' {
   search --set=root --label agentdata
   load_video
   set gfx_payload=keep
